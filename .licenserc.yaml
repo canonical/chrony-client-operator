@@ -6,8 +6,8 @@ header:
       Copyright [year] [owner]
       See LICENSE file for licensing details.
     pattern: |
-        Copyright \d{4} Canonical Ltd.
-        See LICENSE file for licensing details.
+      Copyright \d{4} Canonical Ltd.
+      See LICENSE file for licensing details.
   paths:
     - '**'
   paths-ignore:
@@ -23,4 +23,7 @@ header:
     - 'trivy.yaml'
     - 'pyproject.toml'
     - 'zap_rules.tsv'
+    - 'lib/**'
+    - 'src/grafana_dashboards/**'
+    - 'src/prometheus_alert_rules/**'
   comment: on-failure

@@ -5,35 +5,59 @@
 
 """Integration tests."""
 
-import asyncio
-import logging
-from pathlib import Path
-
+import jubilant
 import pytest
-import yaml
-from pytest_operator.plugin import OpsTest
-
-logger = logging.getLogger(__name__)
-
-CHARMCRAFT_DATA = yaml.safe_load(Path("./charmcraft.yaml").read_text(encoding="utf-8"))
-APP_NAME = CHARMCRAFT_DATA["name"]
 
 
-@pytest.mark.abort_on_fail
-async def test_build_and_deploy(ops_test: OpsTest, pytestconfig: pytest.Config):
-    """Deploy the charm together with related charms.
-
-    Assert on the unit status before any relations/configurations take place.
+def test_time_sources(juju, chrony_client_app, chrony_app):
     """
-    # Deploy the charm and wait for active/idle status
-    charm = pytestconfig.getoption("--charm-file")
-    resources = {"httpbin-image": CHARMCRAFT_DATA["resources"]["httpbin-image"]["upstream-source"]}
-    assert ops_test.model
-    await asyncio.gather(
-        ops_test.model.deploy(
-            f"./{charm}", resources=resources, application_name=APP_NAME, series="jammy"
-        ),
-        ops_test.model.wait_for_idle(
-            apps=[APP_NAME], status="active", raise_on_blocked=True, timeout=1000
-        ),
+    arrange: deploy the chrony-client and chrony charm.
+    act: use the chrony charm as the time source for the chrony-client charm.
+    assert: check if the chrony-client charm is using the time source.
+    """
+    server_ip = chrony_app.get_unit_ip()
+    sources = f"ntp://{server_ip}?iburst=true"
+    juju.config(chrony_client_app.name, {"sources": sources})
+    juju.wait(
+        lambda *args, **kwargs: jubilant.all_active(*args, **kwargs)
+        and jubilant.all_agents_idle(*args, **kwargs)
     )
+
+    assert server_ip in chrony_client_app.ssh("chronyc -N -n -c sources")
+
+
+def test_chrony_exporter(chrony_client_app):
+    """
+    arrange: deploy the chrony-client charm.
+    act: request chrony_exporter metrics endpoint.
+    assert: confirm that metrics are scraped.
+    """
+    stdout = chrony_client_app.ssh("curl -m 10 localhost:9123/metrics")
+    assert "chrony_sources_reachability_success" in stdout
+
+
+def test_charm_conflict(juju, another_chrony_client_app):
+    """
+    arrange: deploy the chrony-client charm.
+    act: deploy another chrony-client charm on the principle charm.
+    assert: confirm that the second charm is in block state.
+    """
+    units = juju.status().get_units(another_chrony_client_app.name)
+    status = units[another_chrony_client_app.get_leader_unit()].workload_status
+    assert status.current == "blocked"
+    assert "conflict" in status.message
+
+
+def test_charm_uninstall_cleanup(juju, chrony_client_app, principle_app):
+    """
+    arrange: deploy the chrony-client charm.
+    act: remove the chrony-client charm.
+    assert: confirm that the chrony-charm related configuration and packages are removed
+    """
+    juju.remove_application(chrony_client_app.name)
+    juju.wait(jubilant.all_active, timeout=20 * 60)
+
+    with pytest.raises(jubilant.CLIError):
+        principle_app.ssh("which chrony_exporter")
+
+    assert "charm" not in principle_app.ssh("cat /etc/chrony/chrony.conf")
