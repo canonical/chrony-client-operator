@@ -13,7 +13,7 @@ on localhost.
 
 `chrony` is installed from the Ubuntu archive, and security patches are
 delivered through Ubuntu archive updates. Use Ubuntu Pro for faster
-security responses. Learn more about [Ubuntu Pro in Juju charms](https://charmhub.io/ubuntu-advantage).
+security responses. See [the Ubuntu Pro charm](https://charmhub.io/ubuntu-advantage).
 
 `chrony_exporter` is installed from the Platform Engineering team’s
 PPA (`ppa:canonical-is-devops/chrony-charm`) and maintained by the

@@ -3,7 +3,7 @@
 At its core, the Chrony client charm is a simple Python program that
 installs and configures `chrony` and `chrony_exporter`.
 
-The Chrony client charm is a subordinate charm which is a charm designed
+The Chrony client charm is a subordinate charm, meaning it is designed
 to be deployed adjacent to another charm and to augment the
 functionality of that charm. In this case, it helps to set up Chrony as
 a NTP client.
@@ -19,9 +19,10 @@ non-subordinate machine charm.
 ```mermaid
 C4Context
     title Component diagram for Chrony client charm
-
     System_Boundary(vm, "VM machine") {
-        Container(principal, "Principal charm")
+        Container_Boundary(principal-charm, "Principal charm"){
+            Component(principal, "Principal charm")
+        }
         Container_Boundary(chrony-client, "Chrony client charm") {
             Component(chrony, "Chrony")
             Component(chrony-exporter, "Chrony exporter")
@@ -29,9 +30,12 @@ C4Context
         Container_Boundary(grafana-agent-charm, "Grafana agent charm") {
             Component(grafana-agent, "Grafana agent")
         }
+        Rel(principal, chrony, "Juju info")
+        UpdateRelStyle(principal, chrony, $offsetX="-22", $offsetY="10")
         Rel(chrony-exporter, grafana-agent, "Prometheus metrics")
-        UpdateRelStyle(chrony-exporter, grafana-agent, $offsetX="-50", $offsetY="10")
+        UpdateRelStyle(chrony-exporter, grafana-agent, $offsetX="-50", $offsetY="20")
     }
+      UpdateLayoutConfig($c4ShapeInRow="1", $c4BoundaryInRow="3")
 ```
 
 ## Metrics

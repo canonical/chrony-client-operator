@@ -58,7 +58,7 @@ juju deploy ubuntu --base ubuntu@24.04
 ```
 
 <!-- vale Canonical.007-Headings-sentence-case = NO -->
-## Deploy the Chrony client charm on the Ubuntu charm
+## Deploy the Chrony client charm
 <!-- vale Canonical.007-Headings-sentence-case = YES -->
 
 The following commands deploy the Chrony client charm and integrate it
