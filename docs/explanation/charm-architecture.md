@@ -1,7 +1,7 @@
 # Charm architecture
 
-At its core, the Chrony client charm is a simple Python program that
-installs and configures `chrony` and `chrony_exporter`.
+At its core, the Chrony client charm installs and configures the 
+`chrony` and `chrony_exporter` services.
 
 The Chrony client charm is a subordinate charm, meaning it is designed
 to be deployed adjacent to another charm and to augment the
