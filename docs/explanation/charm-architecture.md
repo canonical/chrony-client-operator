@@ -68,14 +68,14 @@ event, the Chrony client charm will upgrade the installed `chrony` or
 ### `config-changed`
 
 The `config-changed` hook always runs once immediately after the initial
-install, after leader-elected hooks, and after the `upgrade-charm` hook.
+install, after `leader-elected` hooks, and after the `upgrade-charm` hook.
 It also runs whenever application configuration changes. During this
 event, the Chrony client charm will update the configuration of `chrony`
 and may restart the `chrony` service if the configuration has changed.
 See the documentation on the [`config-changed` event](https://documentation.ubuntu.com/juju/latest/reference/hook/index.html#config-changed).
 
 ### `remove`
-The remove event is emitted only once per unit: when the Juju controller
+The `remove` event is emitted only once per unit: when the Juju controller
 is ready to remove the unit completely. All necessary steps for handling
 removal should be handled there. During this event, the Chrony client 
 charm remove some installed packages and reset the chrony configuration

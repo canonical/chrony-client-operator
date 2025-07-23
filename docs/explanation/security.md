@@ -7,7 +7,7 @@
 The Chrony client charm is a simple charm with a minimal attack surface.
 The Chrony service is configured as a pure NTP client, and the Chrony
 client charm does not expose any ports. The Chrony exporter only listens
-on localhost.
+on `localhost`.
 
 ## Security patches
 

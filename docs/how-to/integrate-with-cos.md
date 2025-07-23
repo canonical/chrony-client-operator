@@ -1,5 +1,5 @@
 <!-- vale Canonical.007-Headings-sentence-case = NO -->
-# Integrate with COS
+# How to integrate with COS
 <!-- vale Canonical.007-Headings-sentence-case = YES -->
 
 ## Prerequisites
