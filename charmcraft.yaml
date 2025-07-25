@@ -65,3 +65,12 @@ parts:
       - libffi-dev
       - libssl-dev
       - pkg-config
+  changelog:
+    source: .
+    plugin: dump
+    stage:
+      - docs/changelog.md
+    organize:
+      docs/changelog.md: changelog.md
+    prime:
+      - changelog.md
