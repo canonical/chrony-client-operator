@@ -1,7 +1,9 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+## 2014-05-31
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+### Added
 
-Each revision is versioned by the date of the revision.
+* Created the initial version of the Chrony client charm, a subordinate
+  charm that configures Chrony as an NTP client on the target machine.
+* Added the initial set of charm documentation.
