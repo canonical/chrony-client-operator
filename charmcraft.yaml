@@ -66,11 +66,7 @@ parts:
       - libssl-dev
       - pkg-config
   changelog:
-    source: .
+    source: ./docs
     plugin: dump
     stage:
-      - docs/changelog.md
-    organize:
-      docs/changelog.md: changelog.md
-    prime:
       - changelog.md
