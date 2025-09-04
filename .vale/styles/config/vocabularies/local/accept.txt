@@ -1,4 +1,6 @@
 chrony
 Chrony
+chronyc
+chronyd
 PPMs
 reachability
