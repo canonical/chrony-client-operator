@@ -1,41 +1,28 @@
-<!--
-Avoid using this README file for information that is maintained or published elsewhere, e.g.:
+# Chrony client charm
 
-* metadata.yaml > published on Charmhub
-* documentation > published on (or linked to from) Charmhub
-* detailed contribution guide > documentation or CONTRIBUTING.md
+[![CharmHub Badge](https://charmhub.io/chrony-client/badge.svg)](https://charmhub.io/chrony-client)
+[![Publish to edge](https://github.com/canonical/chrony-client-operator/actions/workflows/publish_charm.yaml/badge.svg)](https://github.com/canonical/chrony-client-operator/actions/workflows/publish_charm.yaml)
+[![Promote charm](https://github.com/canonical/chrony-client-operator/actions/workflows/promote_charm.yaml/badge.svg)](https://github.com/canonical/chrony-client-operator/actions/workflows/promote_charm.yaml)
+[![Discourse Status](https://img.shields.io/discourse/status?server=https%3A%2F%2Fdiscourse.charmhub.io&style=flat&label=CharmHub%20Discourse)](https://discourse.charmhub.io)
 
-Use links instead.
--->
-<!--
-NOTE: This template has the documentation under the `docs-template` due with issues with discourse-gatekeeper. The `docs-template` directory must be changed to `docs` after using this template to ensure discourse-gatekeeper correctly identifies the documentation changes.
--->
-# platform-engineering-charm-template
-<!-- Use this space for badges -->
+A [Juju](https://juju.is/) [subordinate charm](https://documentation.ubuntu.com/juju/latest/reference/charm/#subordinate)
+that deploys and configures Chrony as an NTP client.
 
-Describe your charm in 1-2 sentences. Include the software that the charm deploys (if applicable), and the substrate (VM/K8s).
+Like any Juju charm, it supports one-line deployment, configuration,
+integration, scaling, and more. Specifically, the Chrony client charm
+can:
 
-Like any Juju charm, this charm supports one-line deployment, configuration, integration, scaling, and more. For Charmed {Name}, this includes:
-* list or summary of app-specific features
+* Install Chrony as an NTP client replacing the system default NTP client
+* Configure time sources
+* Integrate with COS for time tracking status observability
 
-For information about how to deploy, integrate, and manage this charm, see the Official [platform-engineering-charm-template Documentation](external link).
+For information on deploying, integrating, and managing this charm, see
+the official [Chrony Client documentation](https://charmhub.io/chrony-client).
 
 ## Get started
-<!--If the charm already contains a relevant how-to guide or tutorial in its documentation,
-use this section to link the documentation. You don’t need to duplicate documentation here.
-If the tutorial is more complex than getting started, then provide brief descriptions of the
-steps needed for the simplest possible deployment. Make sure to include software and hardware
-prerequisites.
 
-This section could be structured in the following way:
-
-### Set up
-<Steps for setting up the environment (e.g. via Multipass)>
-
-### Deploy
-<Steps for deploying the charm>
-
--->
+To begin, refer to the [Getting Started](./docs/tutorial.md) tutorial
+for step-by-step instructions.
 
 ### Basic operations
 <!--Brief walkthrough of performing standard configurations or operations.
@@ -47,31 +34,15 @@ Use this section to link the Charmhub documentation for actions and configuratio
 You may also want to link to the `charmcraft.yaml` file here.
 -->
 
-## (Optional) Integrations
-<!-- Information about particularly relevant interfaces, endpoints or libraries related to the
-charm. For example, peer relation endpoints required by other charms for integration.
-
-Otherwise, include a link the Charmhub documentation on integrations.
---> 
-
 ## Learn more
-<!-- 
-Provide a list of resources, including the official documentation, developer documentation,
-an official website for the software and a troubleshooting guide. Note that this list is not
-exhaustive or always relevant for every charm. If there is no official troubleshooting guide,
-include a link to the relevant Matrix channel.
--->
 
-* [Read more]() <!--Link to the charm's official documentation-->
-* [Developer documentation]() <!--Link to any developer documentation-->
-* [Official webpage]() <!--(Optional) Link to official upstream webpage/blog/marketing content--> 
-* [Troubleshooting]() <!--(Optional) Link to a page or section about troubleshooting/FAQ-->
+* [Read more](https://charmhub.io/chrony-client)
+* [Developer documentation](https://chrony-project.org/documentation.html)
+* [Official webpage](https://chrony-project.org/)
+* [Troubleshooting](https://matrix.to/#/#charmhub-charmdev:ubuntu.com)
 
 ## Project and community
-* [Issues]() <!--Link to GitHub issues (if applicable)-->
-* [Contributing]() <!--Link to any contribution guides--> 
-* [Matrix]() <!--Link to contact info (if applicable), e.g. Matrix channel-->
-* [Launchpad]() <!--Link to Launchpad (if applicable)-->
-
-## (Optional) Licensing and trademark
+* [Issues](https://github.com/canonical/chrony-client-operator/issues)
+* [Contributing](./CONTRIBUTING.md)
+* [Matrix](https://matrix.to/#/#charmhub-charmdev:ubuntu.com)
 

@@ -1,65 +1,72 @@
 # Copyright 2025 Canonical Ltd.
 # See LICENSE file for licensing details.
-# This file configures Charmcraft.
-# See https://canonical-charmcraft.readthedocs-hosted.com/stable/howto/manage-charmcraft/ 
-# for guidance.
 
-type: charm
-name: is-charms-template
-title: Charm Template
-summary: A very short one-line summary of the charm.
+name: chrony-client
+title: Chrony Client Charm
+summary: Chrony NTP client charm.
 links:
-  documentation: https://discourse.charmhub.io
-  issues: https://github.com/canonical/is-charms-template-repo/issues
-  source: https://github.com/canonical/is-charms-template-repo
+  issues: https://github.com/canonical/chrony-client-operator/issues
+  source: https://github.com/canonical/chrony-client-operator
   contact: https://launchpad.net/~canonical-is-devops
 
 description: |
-  A single sentence that says what the charm is, concisely and memorably.
+  A [Juju](https://juju.is/) [charm](https://juju.is/docs/olm/charmed-operators) 
+  for deploying and managing the [Chrony](https://chrony-project.org) NTP server 
+  in your systems.
+  
+  This charm simplifies the configuration and maintenance of `chrony` as a
+  NTP client.
 
-  A paragraph of one to three short sentences, that describe what the charm does.
+type: charm
+subordinate: true
 
-  A third paragraph that explains what need the charm meets.
-
-  Finally, a paragraph that describes whom the charm is useful for.
-
-bases:
-  - build-on:
-    - name: ubuntu
-      channel: "22.04"
-    run-on:
-    - name: ubuntu
-      channel: "22.04"
-
-# The containers and resources metadata apply to Kubernetes charms only.
-# Remove them if not required.
-
-# Your workload’s containers.
-containers:
-  httpbin:
-    resource: httpbin-image
-
-# This field populates the Resources tab on Charmhub.
-resources:
-  # An OCI image resource for each container listed above.
-  # You may remove this if your charm will run without a workload sidecar container.
-  httpbin-image:
-    type: oci-image
-    description: OCI image for httpbin
-    # The upstream-source field is ignored by Juju. It is included here as a reference
-    # so the integration testing suite knows which image to deploy during testing. This field
-    # is also used by the 'canonical/charming-actions' Github action for automated releasing.
-    upstream-source: kennethreitz/httpbin
-
-# See https://canonical-charmcraft.readthedocs-hosted.com/stable/reference/files/config-yaml-file/
-# for guidance.
 config:
   options:
-    # An example config option to customise the log level of the workload
-    log-level:
-      description: |
-        Configures the log level of gunicorn. 
-
-        Acceptable values are: "info", "debug", "warning", "error" and "critical"
-      default: "info"
+    sources:
+      description: >-
+        Time sources for the Chrony server are specified as a comma-separated list of URLs.
+        Currently, the Chrony charm supports using only another NTP server as the time source.
+        The format for NTP source URLs is as follows: `ntp://host[:port][?options]`, where the options are the same as 
+        Chrony pool configuration settings (https://chrony-project.org/doc/4.5/chrony.conf.html).
+        For NTP sources that support NTS, the URL format is: `nts://host[:nts-ke-port][?options]`. 
+        The options for NTS URLs are the same as those for NTP sources.
+        Here are some examples of supported sources:
+        `ntp://ntp.example.com`
+        `ntp://ntp.example.com:1234`
+        `ntp://ntp.example.com?iburst=true&maxsources=2`
+        `nts://ntp.example.com`
       type: string
+      default: |-
+        ntp://ntp.ubuntu.com?iburst=true&maxsources=4,
+        ntp://0.ubuntu.pool.ntp.org?iburst=true&maxsources=1,
+        ntp://1.ubuntu.pool.ntp.org?iburst=true&maxsources=1,
+        ntp://2.ubuntu.pool.ntp.org?iburst=true&maxsources=2
+
+requires:
+  juju-info:
+    interface: juju-info
+    scope: container
+
+provides:
+  cos-agent:
+    interface: cos_agent
+
+platforms:
+  ubuntu@24.04:amd64:
+  ubuntu@22.04:amd64:
+parts:
+  charm:
+    build-snaps:
+      - rustup
+    override-build: |
+      rustup default stable
+      craftctl default
+    build-packages:
+      - libffi-dev
+      - libssl-dev
+      - pkg-config
+  changelog:
+    source: ./docs
+    plugin: dump
+    stage:
+      - changelog.md

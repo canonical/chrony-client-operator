@@ -3,29 +3,33 @@
 # Copyright 2025 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-# Learn more at: https://documentation.ubuntu.com/juju/3.6/howto/manage-charms/#build-a-charm
+# Learn more at: https://juju.is/docs/sdk
 
-"""Charm the service.
-
-Refer to the following post for a quick-start guide that will help you
-develop a new k8s charm using the Operator Framework:
-
-https://discourse.charmhub.io/t/4208
-"""
+"""Chrony charm."""
 
 import logging
+import pathlib
+import shutil
+import textwrap
 import typing
 
 import ops
-from ops import pebble
+from charms.grafana_agent.v0.cos_agent import COSAgentProvider
 
-# Log messages can be retrieved using juju debug-log
+from chrony import Chrony, TimeSource
+
 logger = logging.getLogger(__name__)
 
-VALID_LOG_LEVELS = ["info", "debug", "warning", "error", "critical"]
+CHRONY_CHARM_LOCK_FILE = pathlib.Path("/var/lib/chrony-charm/lock")
+CHRONY_CHARM_CONFIG_HEADER = textwrap.dedent(
+    """\
+    # This is managed by chrony-client charm (https://charmhub.io/chrony-client).
+    # Do not edit.\
+    """
+)
 
 
-class IsCharmsTemplateCharm(ops.CharmBase):
+class ChronyClientCharm(ops.CharmBase):
     """Charm the service."""
 
     def __init__(self, *args: typing.Any):
@@ -35,85 +39,131 @@ class IsCharmsTemplateCharm(ops.CharmBase):
             args: Arguments passed to the CharmBase parent constructor.
         """
         super().__init__(*args)
-        self.framework.observe(self.on.httpbin_pebble_ready, self._on_httpbin_pebble_ready)
-        self.framework.observe(self.on.config_changed, self._on_config_changed)
+        self.chrony = Chrony()
+        self._grafana_agent = COSAgentProvider(
+            self,
+            metrics_endpoints=[
+                {"path": "/metrics", "port": 9123},
+            ],
+            dashboard_dirs=["./src/grafana_dashboards"],
+        )
+        self.framework.observe(self.on.install, self._do_install_and_config)
+        self.framework.observe(self.on.remove, self._on_remove)
+        self.framework.observe(self.on.upgrade_charm, self._do_install_and_config)
+        self.framework.observe(self.on.config_changed, self._do_install_and_config)
 
-    def _on_httpbin_pebble_ready(self, event: ops.PebbleReadyEvent) -> None:
-        """Define and start a workload using the Pebble API.
+    def _do_install_and_config(self, _: ops.EventBase) -> None:
+        """Install required packages and open NTP port."""
+        if self._try_acquire_chrony_lock():
+            if not self.chrony.is_installed():
+                self.unit.status = ops.MaintenanceStatus("installing chrony")
+                self.chrony.install()
+            self._configure_chrony()
+        else:
+            self._set_lock_failure_status()
 
-        Change this example to suit your needs. You'll need to specify the right entrypoint and
-        environment configuration for your specific workload.
+    def _on_remove(self, _: ops.EventBase) -> None:
+        """Handle remove event."""
+        if self._try_acquire_chrony_lock():
+            self.chrony.uninstall()
+            self.chrony.restore_config()
+            self.chrony.restart()
+            self._release_chrony_lock()
 
-        Learn more about interacting with Pebble at at
-        https://documentation.ubuntu.com/juju/3.6/reference/pebble/.
+    def _configure_chrony(self) -> None:
+        """Configure chrony."""
+        try:
+            sources = self._get_time_sources()
+        except ValueError:
+            self.unit.status = ops.BlockedStatus("invalid sources configuration")
+            return
+        if not sources:
+            self.unit.status = ops.BlockedStatus("no time source configured")
+            return
+        if CHRONY_CHARM_CONFIG_HEADER not in self.chrony.read_config():
+            self.chrony.backup_config()
+        new_config = self.chrony.new_config(sources=sources, header=CHRONY_CHARM_CONFIG_HEADER)
+        current_config = self.chrony.read_config()
+        if new_config != current_config:
+            logger.info("Chrony config changed, apply and restart chrony")
+            self.chrony.write_config(new_config)
+            self.chrony.restart()
 
-        Args:
-            event: event triggering the handler.
-        """
-        # Get a reference the container attribute on the PebbleReadyEvent
-        container = event.workload
-        # Add initial Pebble config layer using the Pebble API
-        container.add_layer("httpbin", self._pebble_layer, combine=True)
-        # Make Pebble reevaluate its plan, ensuring any services are started if enabled.
-        container.replan()
-        # Learn more about statuses in the SDK docs:
-        # https://documentation.ubuntu.com/juju/latest/reference/status/index.html
         self.unit.status = ops.ActiveStatus()
 
-    def _on_config_changed(self, event: ops.ConfigChangedEvent) -> None:
-        """Handle changed configuration.
+    def _get_time_sources(self) -> list[TimeSource]:
+        """Get time sources from charm configuration.
 
-        Change this example to suit your needs. If you don't need to handle config, you can remove
-        this method.
+        Returns:
+            Time source objects.
+        """
+        urls = typing.cast(str, self.config.get("sources"))
+        return [
+            self.chrony.parse_source_url(url.strip()) for url in urls.split(",") if url.strip()
+        ]
 
-        Learn more about config at
-        https://canonical-charmcraft.readthedocs-hosted.com/stable/reference/files/config-yaml-file/
+    @staticmethod
+    def _write_chrony_lock_file(content: str) -> None:
+        """Write chrony charm lock file.
 
         Args:
-            event: event triggering the handler.
+            content: lock file content.
         """
-        # Fetch the new config value
-        log_level = str(self.model.config["log-level"]).lower()
+        CHRONY_CHARM_LOCK_FILE.parent.mkdir(parents=True, exist_ok=True)
+        CHRONY_CHARM_LOCK_FILE.write_text(content, encoding="utf-8")
 
-        # Do some validation of the configuration option
-        if log_level in VALID_LOG_LEVELS:
-            # The config is good, so update the configuration of the workload
-            container = self.unit.get_container("httpbin")
-            # Verify that we can connect to the Pebble API in the workload container
-            if container.can_connect():
-                # Push an updated layer with the new config
-                container.add_layer("httpbin", self._pebble_layer, combine=True)
-                container.replan()
+    @staticmethod
+    def _read_chrony_lock_file() -> typing.Optional[str]:
+        """Read chrony charm lock file.
 
-                logger.debug("Log level for gunicorn changed to '%s'", log_level)
-                self.unit.status = ops.ActiveStatus()
-            else:
-                # We were unable to connect to the Pebble API, so we defer this event
-                event.defer()
-                self.unit.status = ops.WaitingStatus("waiting for Pebble API")
+        Returns:
+            None if lock file doesn't exist, otherwise lock file content.
+        """
+        if CHRONY_CHARM_LOCK_FILE.exists():
+            return CHRONY_CHARM_LOCK_FILE.read_text(encoding="utf-8")
+        return None
+
+    @staticmethod
+    def _delete_chrony_lock_file() -> None:
+        """Delete chrony charm lock file."""
+        shutil.rmtree(CHRONY_CHARM_LOCK_FILE.parent)
+
+    def _try_acquire_chrony_lock(self) -> bool:
+        """Try to acquire chrony lock.
+
+        The chrony lock ensures that when multiple instances of the
+        chrony charm are installed on the same machine, only one
+        chrony charm application will execute.
+
+        Returns:
+            True if lock acquired, False otherwise.
+        """
+        lock_content = self.app.name
+        lock_file = self._read_chrony_lock_file()
+        if lock_file is None:
+            self._write_chrony_lock_file(lock_content)
+            return True
+        if lock_file.strip() == lock_content:
+            return True
+        return False
+
+    def _release_chrony_lock(self) -> None:
+        """Release chrony lock.
+
+        Remove the chrony charm lock file.
+        """
+        if self._try_acquire_chrony_lock():
+            self._delete_chrony_lock_file()
         else:
-            # In this case, the config option is bad, so block the charm and notify the operator.
-            self.unit.status = ops.BlockedStatus("invalid log level: '{log_level}'")
+            raise RuntimeError("failed to delete the lock file: owned by another charm")
 
-    @property
-    def _pebble_layer(self) -> pebble.LayerDict:
-        """Return a dictionary representing a Pebble layer."""
-        return {
-            "summary": "httpbin layer",
-            "description": "pebble config layer for httpbin",
-            "services": {
-                "httpbin": {
-                    "override": "replace",
-                    "summary": "httpbin",
-                    "command": "gunicorn -b 0.0.0.0:80 httpbin:app -k gevent",
-                    "startup": "enabled",
-                    "environment": {
-                        "GUNICORN_CMD_ARGS": f"--log-level {self.model.config['log-level']}"
-                    },
-                }
-            },
-        }
+    def _set_lock_failure_status(self) -> None:
+        """Set unit status to inform user to remove this charm application."""
+        self.unit.status = ops.BlockedStatus(
+            "conflict: multiple chrony charms detected, "
+            f"remove this charm using `juju remove-application {self.app.name}`"
+        )
 
 
 if __name__ == "__main__":  # pragma: nocover
-    ops.main.main(IsCharmsTemplateCharm)
+    ops.main.main(ChronyClientCharm)

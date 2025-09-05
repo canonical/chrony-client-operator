@@ -10,3 +10,14 @@ jobs:
     with:
       self-hosted-runner: true
       self-hosted-runner-label: "edge"
+  docs-checks:
+    uses: canonical/operator-workflows/.github/workflows/docs.yaml@main
+    secrets: inherit
+  integration-tests:
+    uses: canonical/operator-workflows/.github/workflows/integration_test.yaml@main
+    secrets: inherit
+    with:
+      self-hosted-runner: true
+      self-hosted-runner-label: "edge"
+      juju-channel: '3/stable'
+      provider: 'lxd'
