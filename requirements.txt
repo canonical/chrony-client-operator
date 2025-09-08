@@ -1,4 +1,4 @@
 jsonschema==4.24.0
-ops==2.22.0
+ops==3.2.0
 pydantic==2.11.7
 cosl==1.0.0
