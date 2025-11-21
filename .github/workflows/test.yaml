@@ -2,6 +2,8 @@ name: Tests
 
 on:
   pull_request:
+  schedule:
+  - cron: "0 15 * * SAT"
 
 jobs:
   unit-tests:
@@ -16,7 +18,8 @@ jobs:
     with:
       linkcheck-fail-on-error: false
   integration-tests:
-    uses: canonical/operator-workflows/.github/workflows/integration_test.yaml@main
+    uses: 
+      canonical/operator-workflows/.github/workflows/integration_test.yaml@main
     secrets: inherit
     with:
       self-hosted-runner: true
@@ -24,7 +27,7 @@ jobs:
       juju-channel: '3/stable'
       provider: 'lxd'
   allure-report:
-    if: always() && !cancelled()
+    if: ${{ (success() || failure()) && github.event_name == 'schedule' }}
     needs:
-      - integration-tests
+    - integration-tests
     uses: canonical/operator-workflows/.github/workflows/allure_report.yaml@main
