@@ -4,7 +4,6 @@
 """Chrony controller."""
 
 # check chrony.conf document for _PoolOptions attributes.
-# flake8: noqa: DCO060
 
 import collections
 import itertools
@@ -188,9 +187,7 @@ class Chrony:
     @staticmethod
     def install() -> None:  # pragma: nocover
         """Install the Chrony on the system."""
-        subprocess.check_call(
-            ["add-apt-repository", "-y", "ppa:canonical-is-devops/chrony-charm"]
-        )  # nosec
+        subprocess.check_call(["add-apt-repository", "-y", "ppa:canonical-is-devops/chrony-charm"])  # nosec
         apt.add_package(
             ["chrony", "ca-certificates", "prometheus-chrony-exporter"], update_cache=True
         )
