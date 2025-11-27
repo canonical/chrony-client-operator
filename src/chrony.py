@@ -187,7 +187,7 @@ class Chrony:
     @staticmethod
     def install() -> None:  # pragma: nocover
         """Install the Chrony on the system."""
-        subprocess.check_call(["add-apt-repository", "-y", "ppa:canonical-is-devops/chrony-charm"])  # nosec
+        subprocess.check_call(["add-apt-repository", "-y", "ppa:canonical-is-devops/chrony-charm"])  # nosec # noqa: S607
         apt.add_package(
             ["chrony", "ca-certificates", "prometheus-chrony-exporter"], update_cache=True
         )
