@@ -1,2 +1,0 @@
-pytest==8.4.1
-jubilant==1.2.0

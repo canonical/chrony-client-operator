@@ -143,9 +143,7 @@ class ChronyClientCharm(ops.CharmBase):
         if lock_file is None:
             self._write_chrony_lock_file(lock_content)
             return True
-        if lock_file.strip() == lock_content:
-            return True
-        return False
+        return lock_file.strip() == lock_content
 
     def _release_chrony_lock(self) -> None:
         """Release chrony lock.
