@@ -124,10 +124,7 @@ class App:
         """
         status = self._juju.status()
         units = status.get_units(self.name)
-        if unit_num is None:
-            unit_name = self.get_leader_unit()
-        else:
-            unit_name = f"{self.name}/{unit_num}"
+        unit_name = self.get_leader_unit() if unit_num is None else f"{self.name}/{unit_num}"
         unit_ip = units[unit_name].public_address
         return unit_ip
 
@@ -141,10 +138,7 @@ class App:
         Returns:
             Output of the command.
         """
-        if unit_num is None:
-            unit_name = self.get_leader_unit()
-        else:
-            unit_name = f"{self.name}/{unit_num}"
+        unit_name = self.get_leader_unit() if unit_num is None else f"{self.name}/{unit_num}"
         return self._juju.ssh(target=unit_name, command=cmd)
 
 

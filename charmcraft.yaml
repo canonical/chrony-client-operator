@@ -56,17 +56,12 @@ platforms:
   ubuntu@22.04:amd64:
 parts:
   charm:
+    source: .
+    plugin: uv
     build-snaps:
-      - rustup
-    override-build: |
-      rustup default stable
-      craftctl default
-    build-packages:
-      - libffi-dev
-      - libssl-dev
-      - pkg-config
+    - astral-uv
   changelog:
     source: ./docs
     plugin: dump
     stage:
-      - changelog.md
+    - changelog.md
