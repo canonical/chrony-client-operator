@@ -80,6 +80,7 @@ def deploy_charms_fixture(juju: jubilant.Juju, chrony_client_charm_file: str):
         charm="chrony",
         config={"sources": "ntp://ntp.ubuntu.com?iburst=true&maxsources=4"},
         channel="latest/edge",
+        constraints={"virt-type": "virtual-machine"}
     )
     juju.integrate("ubuntu", "chrony-client")
     juju.wait(jubilant.all_active, timeout=20 * 60)
