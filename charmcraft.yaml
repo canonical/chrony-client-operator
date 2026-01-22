@@ -63,6 +63,7 @@ parts:
       - astral-uv
   files:
     source: .
+    plugin: dump
     stage:
       - files
   changelog:
