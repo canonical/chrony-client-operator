@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-01-22
+
+* Bundle chrony_exporter inside the charm instead of installing it from
+  a PPA.
+
 ## 2025-12-17
 
 * Moved charm-architecture.md from Explanation to Reference category.
