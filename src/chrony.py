@@ -194,7 +194,7 @@ class Chrony:
     def install(self) -> None:  # pragma: nocover
         """Install the Chrony on the system."""
         apt.add_package(
-            ["chrony", "ca-certificates", "prometheus-chrony-exporter"],
+            ["chrony", "ca-certificates"],
             update_cache=True,
         )
         self._install_chrony_exporter()
