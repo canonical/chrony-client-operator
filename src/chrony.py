@@ -409,10 +409,10 @@ class Chrony:
         systemd_file = _FILES_DIR / "chrony-exporter.service"
         shutil.copy(systemd_file, _CHRONY_EXPORTER_SERVICE_FILE)
         os.chmod(_CHRONY_EXPORTER_SERVICE_FILE, 0o644)
-        apparmor_file = _FILES_DIR / "usr.bin.chrony_exporter"
-        shutil.copy(apparmor_file, _CHRONY_EXPORTER_APPARMOR_FILE)
-        os.chmod(apparmor_file, 0o644)
-        systemd.service_reload("apparmor")
+        # apparmor_file = _FILES_DIR / "usr.bin.chrony_exporter"
+        # shutil.copy(apparmor_file, _CHRONY_EXPORTER_APPARMOR_FILE)
+        # os.chmod(apparmor_file, 0o644)
+        # systemd.service_reload("apparmor")
         systemd.service_enable("prometheus-chrony-exporter")
         systemd.service_start("prometheus-chrony-exporter")
 
@@ -421,5 +421,6 @@ class Chrony:
         systemd.service_stop("prometheus-chrony-exporter")
         systemd.service_disable("prometheus-chrony-exporter")
         os.unlink(_CHRONY_EXPORTER_SERVICE_FILE)
-        os.unlink(_CHRONY_EXPORTER_APPARMOR_FILE)
+        # os.unlink(_CHRONY_EXPORTER_APPARMOR_FILE)
+        # systemd.service_reload("apparmor")
         os.unlink(_CHRONY_EXPORTER_BIN_FILE)
