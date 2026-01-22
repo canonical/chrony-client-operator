@@ -77,6 +77,6 @@ parts:
     source-commit: dab3fdc542cc3c4409d0892fa1d8e1dae09792e2
     plugin: go
     build-environment:
-      CGO_ENABLED: "0"
+      - CGO_ENABLED=0
     build-snaps:
       - go
