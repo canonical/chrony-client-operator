@@ -26,5 +26,6 @@ header:
   - 'lib/**'
   - 'src/grafana_dashboards/**'
   - 'src/prometheus_alert_rules/**'
+  - 'files/**'
   - 'uv.lock'
   comment: on-failure

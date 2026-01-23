@@ -8,9 +8,9 @@
 import collections
 import itertools
 import logging
+import os
 import pathlib
 import shutil
-import subprocess  # nosec
 import textwrap
 import typing
 import urllib.parse
@@ -20,6 +20,13 @@ from charms.operator_libs_linux.v0 import apt
 from charms.operator_libs_linux.v1 import systemd
 
 logger = logging.getLogger(__name__)
+
+_BIN_DIR = pathlib.Path(__file__).parent.parent / "bin"
+_FILES_DIR = pathlib.Path(__file__).parent.parent / "files"
+_CHRONY_EXPORTER_BIN_FILE = "/usr/bin/chrony_exporter"
+_CHRONY_EXPORTER_SERVICE_FILE = "/usr/lib/systemd/system/prometheus-chrony-exporter.service"
+_CHRONY_EXPORTER_APPARMOR_FILE = "/etc/apparmor.d/usr.bin.chrony_exporter"
+_CHRONY_EXPORTER_SERVICE_NAME = "prometheus-chrony-exporter"
 
 
 class _PoolOptions(pydantic.BaseModel):
@@ -184,22 +191,21 @@ class Chrony:
         """
         return bool(shutil.which("chrony_exporter") and shutil.which("chronyc"))
 
-    @staticmethod
-    def install() -> None:  # pragma: nocover
+    def install(self) -> None:  # pragma: nocover
         """Install the Chrony on the system."""
-        subprocess.check_call(["add-apt-repository", "-y", "ppa:canonical-is-devops/chrony-charm"])  # nosec # noqa: S607
         apt.add_package(
-            ["chrony", "ca-certificates", "prometheus-chrony-exporter"], update_cache=True
+            ["chrony", "ca-certificates"],
+            update_cache=True,
         )
+        self._install_chrony_exporter()
 
-    @staticmethod
-    def uninstall() -> None:
+    def uninstall(self) -> None:
         """Uninstall installed packages from the system.
 
         Not all packages will be uninstalled, as some are system defaults.
         For example, ca-certificates and chrony (as in Ubuntu 26.04).
         """
-        apt.remove_package(["prometheus-chrony-exporter"])
+        self._uninstall_chrony_exporter()
 
     def read_config(self) -> str:
         """Read the current chrony configuration file.
@@ -381,8 +387,7 @@ class Chrony:
         if not sources:
             raise ValueError("No time sources provided")
         sources_config = "\n".join(s.render() for s in sources)
-        static = textwrap.dedent(
-            """\
+        static = textwrap.dedent("""\
                 sourcedir /run/chrony-dhcp
                 sourcedir /etc/chrony/sources.d
                 keyfile /etc/chrony/chrony.keys
@@ -393,6 +398,29 @@ class Chrony:
                 rtcsync
                 makestep 1 3
                 leapsectz right/UTC
-            """
-        )
+            """)
         return "\n\n".join(part for part in [header, sources_config, static] if part).lstrip()
+
+    def _install_chrony_exporter(self) -> None:
+        """Install chrony_exporter service."""
+        exporter_bin = _BIN_DIR / "chrony_exporter"
+        shutil.copy(exporter_bin, _CHRONY_EXPORTER_BIN_FILE)
+        os.chmod(_CHRONY_EXPORTER_BIN_FILE, 0o755)  # nosec # noqa: S103
+        systemd_file = _FILES_DIR / "chrony-exporter.service"
+        shutil.copy(systemd_file, _CHRONY_EXPORTER_SERVICE_FILE)
+        os.chmod(_CHRONY_EXPORTER_SERVICE_FILE, 0o644)
+        apparmor_file = _FILES_DIR / "usr.bin.chrony_exporter"
+        shutil.copy(apparmor_file, _CHRONY_EXPORTER_APPARMOR_FILE)
+        os.chmod(apparmor_file, 0o644)
+        systemd.service_reload("apparmor")
+        systemd.service_enable("prometheus-chrony-exporter")
+        systemd.service_start("prometheus-chrony-exporter")
+
+    def _uninstall_chrony_exporter(self) -> None:
+        """Uninstall chrony_exporter service."""
+        systemd.service_stop("prometheus-chrony-exporter")
+        systemd.service_disable("prometheus-chrony-exporter")
+        os.unlink(_CHRONY_EXPORTER_SERVICE_FILE)
+        os.unlink(_CHRONY_EXPORTER_APPARMOR_FILE)
+        systemd.service_reload("apparmor")
+        os.unlink(_CHRONY_EXPORTER_BIN_FILE)

@@ -54,14 +54,29 @@ provides:
 platforms:
   ubuntu@24.04:amd64:
   ubuntu@22.04:amd64:
+
 parts:
   charm:
     source: .
     plugin: uv
     build-snaps:
-    - astral-uv
+      - astral-uv
+  files:
+    source: .
+    plugin: dump
+    stage:
+      - files
   changelog:
     source: ./docs
     plugin: dump
     stage:
-    - changelog.md
+      - changelog.md
+  chrony-exporter:
+    source: https://github.com/SuperQ/chrony_exporter.git
+    source-type: git
+    source-tag: v0.12.2
+    plugin: go
+    build-environment:
+      - CGO_ENABLED: "0"
+    build-snaps:
+      - go
