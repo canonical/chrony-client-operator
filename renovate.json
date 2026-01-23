@@ -7,17 +7,14 @@
   "customManagers": [
     {
       "customType": "regex",
-      "managerFilePatterns": [
-        "/(^|/)rockcraft.yaml$/"
+      "fileMatch": [
+        "^charmcraft\\.yaml$"
       ],
-      "description": "Update base image references",
-      "matchStringsStrategy": "any",
       "matchStrings": [
-        "# renovate: build-base:\\s+(?<depName>[^:]*):(?<currentValue>[^\\s@]*)(@(?<currentDigest>sha256:[0-9a-f]*))?",
-        "# renovate: base:\\s+(?<depName>[^:]*):(?<currentValue>[^\\s@]*)(@(?<currentDigest>sha256:[0-9a-f]*))?"
+        "source-tag: (?<currentValue>v\\d+\\.\\d+\\.\\d+)"
       ],
-      "datasourceTemplate": "docker",
-      "versioningTemplate": "ubuntu"
+      "datasourceTemplate": "github-tags",
+      "packageNameTemplate": "SuperQ/chrony_exporter"
     }
   ],
   "packageRules": [
