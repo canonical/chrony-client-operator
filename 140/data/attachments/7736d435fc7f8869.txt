@@ -1,0 +1,2 @@
+[32mINFO    [0m jubilant:_juju.py:391 cli: juju status --model jubilant-b2084ea0 --format json
+[32mINFO    [0m jubilant:_juju.py:391 cli: juju ssh --model jubilant-b2084ea0 chrony-client/0 'curl -m 10 localhost:9123/metrics'
