@@ -17,6 +17,7 @@
       "packageNameTemplate": "SuperQ/chrony_exporter"
     }
   ],
+  "automerge": true,
   "packageRules": [
     {
       "enabled": true,
