@@ -16,8 +16,8 @@ import typing
 import urllib.parse
 
 import pydantic
+from charmlibs import systemd
 from charms.operator_libs_linux.v0 import apt
-from charms.operator_libs_linux.v1 import systemd
 
 logger = logging.getLogger(__name__)
 
