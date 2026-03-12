@@ -71,7 +71,11 @@ parts:
     plugin: dump
     stage:
       - changelog.md
+  patches:
+    source: ./patches
+    plugin: nil
   chrony-exporter:
+    after: [ patches ]
     source: https://github.com/SuperQ/chrony_exporter.git
     source-type: git
     source-tag: v0.12.3
@@ -80,3 +84,6 @@ parts:
       - CGO_ENABLED: "0"
     build-snaps:
       - go
+    override-build: |
+      git apply $CRAFT_PART_BUILD/../../patches/build/exporter-reverse-lookup-timeout.patch
+      craftctl default
