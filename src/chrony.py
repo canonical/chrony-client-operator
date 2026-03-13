@@ -23,9 +23,16 @@ logger = logging.getLogger(__name__)
 
 _BIN_DIR = pathlib.Path(__file__).parent.parent / "bin"
 _FILES_DIR = pathlib.Path(__file__).parent.parent / "files"
-_CHRONY_EXPORTER_BIN_FILE = "/usr/bin/chrony_exporter"
-_CHRONY_EXPORTER_SERVICE_FILE = "/usr/lib/systemd/system/prometheus-chrony-exporter.service"
-_CHRONY_EXPORTER_APPARMOR_FILE = "/etc/apparmor.d/usr.bin.chrony_exporter"
+_CHRONY_EXPORTER_BIN_FILE = pathlib.Path("/usr/bin/chrony_exporter")
+_CHRONY_EXPORTER_SERVICE_FILE = pathlib.Path(
+    "/usr/lib/systemd/system/prometheus-chrony-exporter.service"
+)
+_CHRONY_EXPORTER_APPARMOR_FILE = pathlib.Path("/etc/apparmor.d/usr.bin.chrony_exporter")
+_CHRONY_EXPORTER_FILES = {
+    _BIN_DIR / "chrony_exporter": _CHRONY_EXPORTER_BIN_FILE,
+    _FILES_DIR / "chrony-exporter.service": _CHRONY_EXPORTER_SERVICE_FILE,
+    _FILES_DIR / "usr.bin.chrony_exporter": _CHRONY_EXPORTER_APPARMOR_FILE,
+}
 _CHRONY_EXPORTER_SERVICE_NAME = "prometheus-chrony-exporter"
 
 
@@ -189,15 +196,25 @@ class Chrony:
         Returns:
             True if installed, False otherwise.
         """
-        return bool(shutil.which("chrony_exporter") and shutil.which("chronyc"))
+        if not shutil.which("chrony_exporter"):
+            return False
+        if not shutil.which("chronyc"):
+            return False
+        for source, target in _CHRONY_EXPORTER_FILES.items():
+            if source.read_bytes() != target.read_bytes():
+                return False
+        return True
 
     def install(self) -> None:  # pragma: nocover
-        """Install the Chrony on the system."""
+        """Install or upgrade Chrony on the system."""
         apt.add_package(
             ["chrony", "ca-certificates"],
             update_cache=True,
         )
-        self._install_chrony_exporter()
+        if not shutil.which("chrony_exporter"):
+            self._install_chrony_exporter()
+        else:
+            self._upgrade_chrony_exporter()
 
     def uninstall(self) -> None:
         """Uninstall installed packages from the system.
@@ -401,20 +418,27 @@ class Chrony:
             """)
         return "\n\n".join(part for part in [header, sources_config, static] if part).lstrip()
 
+    def _install_chrony_exporter_files(self) -> None:
+        """Install chrony_exporter files."""
+        for source, dest in _CHRONY_EXPORTER_FILES.items():
+            executable = os.access(source, os.X_OK)
+            if executable:
+                dest.unlink(missing_ok=True)
+            shutil.copy(source, dest)
+            os.chmod(dest, 0o755 if executable else 0o644)
+
     def _install_chrony_exporter(self) -> None:
         """Install chrony_exporter service."""
-        exporter_bin = _BIN_DIR / "chrony_exporter"
-        shutil.copy(exporter_bin, _CHRONY_EXPORTER_BIN_FILE)
-        os.chmod(_CHRONY_EXPORTER_BIN_FILE, 0o755)  # nosec # noqa: S103
-        systemd_file = _FILES_DIR / "chrony-exporter.service"
-        shutil.copy(systemd_file, _CHRONY_EXPORTER_SERVICE_FILE)
-        os.chmod(_CHRONY_EXPORTER_SERVICE_FILE, 0o644)
-        apparmor_file = _FILES_DIR / "usr.bin.chrony_exporter"
-        shutil.copy(apparmor_file, _CHRONY_EXPORTER_APPARMOR_FILE)
-        os.chmod(apparmor_file, 0o644)
+        self._install_chrony_exporter_files()
         systemd.service_reload("apparmor")
-        systemd.service_enable("prometheus-chrony-exporter")
-        systemd.service_start("prometheus-chrony-exporter")
+        systemd.service_enable(_CHRONY_EXPORTER_SERVICE_NAME)
+        systemd.service_start(_CHRONY_EXPORTER_SERVICE_NAME)
+
+    def _upgrade_chrony_exporter(self) -> None:
+        self._install_chrony_exporter_files()
+        systemd.daemon_reload()
+        systemd.service_reload("apparmor")
+        systemd.service_restart(_CHRONY_EXPORTER_SERVICE_NAME)
 
     def _uninstall_chrony_exporter(self) -> None:
         """Uninstall chrony_exporter service."""
