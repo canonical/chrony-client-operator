@@ -421,7 +421,7 @@ class Chrony:
     def _install_chrony_exporter_files(self) -> None:
         """Install chrony_exporter files."""
         for source, dest in _CHRONY_EXPORTER_FILES.items():
-            executable = os.access(dest, os.X_OK)
+            executable = os.access(source, os.X_OK)
             if executable:
                 dest.unlink(missing_ok=True)
             shutil.copy(source, dest)
