@@ -85,5 +85,5 @@ parts:
     build-snaps:
       - go
     override-build: |
-      git apply $CRAFT_PART_BUILD/../../patches/build/exporter-reverse-lookup-timeout.patch
+      git apply "$CRAFT_PROJECT_DIR/patches/exporter-reverse-lookup-timeout.patch"
       craftctl default
