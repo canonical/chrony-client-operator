@@ -12,4 +12,4 @@ jobs:
     uses: canonical/operator-workflows/.github/workflows/generate_terraform_docs.yaml@main
     secrets: inherit
     with:
-      terraform-directory: terraform/charm,terraform/product
+      terraform-directory: terraform/charm
