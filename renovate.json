@@ -1,21 +1,21 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended",
-    "group:allNonMajor"
-  ],
   "customManagers": [
     {
       "customType": "regex",
+      "datasourceTemplate": "github-tags",
       "fileMatch": [
         "^charmcraft\\.yaml$"
       ],
       "matchStrings": [
         "source-tag: (?<currentValue>v\\d+\\.\\d+\\.\\d+)"
       ],
-      "datasourceTemplate": "github-tags",
       "packageNameTemplate": "SuperQ/chrony_exporter"
     }
+  ],
+  "extends": [
+    "config:recommended",
+    "group:allNonMajor"
   ],
   "packageRules": [
     {
@@ -26,6 +26,7 @@
       "pinDigests": true
     },
     {
+      "enabled": false,
       "matchFileNames": [
         "rockcraft.yaml"
       ],
@@ -33,8 +34,13 @@
         "major",
         "minor",
         "patch"
-      ],
-      "enabled": false
+      ]
     }
-  ]
+  ],
+  "schedule": [
+    "* * * * 0,6"
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true
+  }
 }
