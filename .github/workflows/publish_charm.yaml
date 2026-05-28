@@ -13,3 +13,6 @@ jobs:
     with:
       channel: latest/edge
       integration-test-workflow-file: test.yaml
+    permissions:
+      actions: read
+      contents: write
