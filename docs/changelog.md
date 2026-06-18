@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-05-19
+
+* Increased the `ChronyTrackingStaleMeasurement` alert threshold from
+  30 minutes to 8 hours to reduce false positives.
+
 ## 2026-01-22
 
 * Bundle chrony_exporter inside the charm instead of installing it from
