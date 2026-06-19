@@ -62,6 +62,7 @@ The complete list of available integrations can be found [in the Integrations ta
 
 | Name | Version |
 |------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
 | <a name="requirement_juju"></a> [juju](#requirement\_juju) | >= 0.17.1 |
 
 ## Providers
