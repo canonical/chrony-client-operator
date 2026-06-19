@@ -13,6 +13,9 @@ jobs:
       self-hosted-runner: true
       self-hosted-runner-label: "edge"
       with-uv: true
+    permissions:
+      pull-requests: write
+      contents: read
   docs-checks:
     uses: canonical/operator-workflows/.github/workflows/docs.yaml@main
     secrets: inherit
