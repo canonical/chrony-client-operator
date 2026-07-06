@@ -1,3 +1,9 @@
+> [!WARNING]
+> **This repository has moved.**
+>
+> Development of this project now happens in the
+> [canonical/chrony-operators](https://github.com/canonical/chrony-operators).
+
 # Chrony client charm
 
 [![CharmHub Badge](https://charmhub.io/chrony-client/badge.svg)](https://charmhub.io/chrony-client)
